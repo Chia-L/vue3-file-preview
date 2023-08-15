@@ -8,6 +8,15 @@ export function readBuffer(file) {
   }))
 }
 
+export async function readText(buffer) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = loadEvent => resolve(loadEvent.target.result);
+    reader.onerror = e => reject(e);
+    reader.readAsText(new Blob([buffer]), "utf-8");
+  });
+}
+
 export function getExtend(name) {
   const dot = name.lastIndexOf(".");
   return name.substr(dot + 1);

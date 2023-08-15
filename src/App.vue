@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { readBuffer, getExtend, render } from '@/vendors'
+import { readBuffer, getExtend, render } from '@/vendors/index'
 
 // 下载按钮实例
 const uploadInsRef = ref()
@@ -35,7 +35,6 @@ function showView(buffer, file) {
   const { name } = file;
   const extend = getExtend(name)
   const node = document.createElement("div")
-  console.log(extend, node, showViewRef.value.$el)
   if (lastViewRef.value) {
     showViewRef.value.$el?.removeChild(showViewRef.value.$el?.lastChild)
     lastViewRef.value.$destroy()
@@ -89,7 +88,7 @@ function showView(buffer, file) {
       }
     }
     .el-main {
-      background-color: #525659;
+      background-color: #2d2d2d;
     }
     .el-footer {
       height: @footerHeight!important;

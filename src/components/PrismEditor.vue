@@ -1,6 +1,5 @@
 <script setup>
-import Vue, { VNode } from 'vue';
-import { ref, watch, computed, nextTick, onMounted } from 'vue'
+import {ref, watch, computed, nextTick, onMounted} from 'vue'
 
 const KEYCODE_ENTER = 13;
 const KEYCODE_TAB = 9;
@@ -58,7 +57,7 @@ const props = defineProps({
     default: '',
   },
 })
-const emits = defineEmits(['input', 'keydown', 'blur'])
+const emits = defineEmits(['input', 'keydown', 'keyup', 'click', 'focus', 'blur'])
 
 const captureRef = ref(true)
 const historyRef = ref({
@@ -74,11 +73,11 @@ const isEmptyRef = computed(() => {
   return codeDataRef.value?.length === 0
 })
 const contentRef = computed(() => {
-  const result = props.highlight(codeDataRef.value) + '<br />';
+  const result = props.highlight(codeDataRef.value) + '<br />'
   return result;
 })
 const lineNumbersCountRef = computed(() => {
-  const totalLines = codeDataRef.value.split(/\r\n|\n/).length;
+  const totalLines = codeDataRef.value.split(/\r\n|\n/).length
   return totalLines;
 })
 
@@ -88,7 +87,7 @@ watch(() => props.value, value => {
   } else {
     codeDataRef.value = value;
   }
-}, { immediate: true })
+}, {immediate: true})
 
 watch(contentRef, value => {
   if (props.lineNumbers) {
@@ -96,7 +95,7 @@ watch(contentRef, value => {
       setLineNumbersHeight();
     })
   }
-}, { immediate: true })
+}, {immediate: true})
 
 watch(() => props.lineNumbers, value => {
   nextTick(() => {
@@ -105,11 +104,12 @@ watch(() => props.lineNumbers, value => {
       setLineNumbersHeight();
     }
   })
-}, { immediate: true })
+}, {immediate: true})
 
 function setLineNumbersHeight() {
-  lineNumbersHeightRef.value = getComputedStyle(preInsRef.value.$el).height;
+  lineNumbersHeightRef.value = window.getComputedStyle(preInsRef.value).height;
 }
+
 function applyEdits(record) {
   // Save last selection state
   const last = historyRef.value.stack[historyRef.value.offset];
@@ -125,18 +125,19 @@ function applyEdits(record) {
   recordChange(record);
   updateInput(record);
 }
+
 function styleLineNumbers() {
   if (!props.lineNumbers || !props.autoStyleLineNumbers) return
   const lineNumbers = document.querySelector('.prism-editor__line-numbers')
-  const editorStyles = window.getComputedStyle(preInsRef.value.$el)
+  const editorStyles = window.getComputedStyle(preInsRef.value)
   nextTick(() => {
     const btlr = 'border-top-left-radius'
     const bblr = 'border-bottom-left-radius'
     if (!lineNumbers) return
     lineNumbers.style[btlr] = editorStyles[btlr]
     lineNumbers.style[bblr] = editorStyles[bblr]
-    preInsRef.value.$el.style[btlr] = '0'
-    preInsRef.value.$el.style[bblr] = '0'
+    preInsRef.value.style[btlr] = '0'
+    preInsRef.value.style[bblr] = '0'
     const stylesList = ['background-color', 'margin-top', 'padding-top', 'font-family', 'font-size', 'line-height']
     stylesList.forEach((style) => {
       lineNumbers.style[style] = editorStyles[style]
@@ -144,18 +145,20 @@ function styleLineNumbers() {
     lineNumbers.style['margin-bottom'] = '-' + editorStyles['padding-top']
   })
 }
+
 function recordCurrentState() {
   if (!textareaInsRef.value.$el) return;
   // Save current state of the input
-  const { value, selectionStart, selectionEnd } = textareaInsRef.value.$el;
+  const {value, selectionStart, selectionEnd} = textareaInsRef.value.$el;
   recordChange({
     value,
     selectionStart,
     selectionEnd,
   });
 }
+
 function recordChange(record, overwrite = false) {
-  const { stack, offset } = historyRef.value
+  const {stack, offset} = historyRef.value
 
   if (stack.length && offset > -1) {
     // When something updates, drop the redo operations
@@ -195,14 +198,16 @@ function recordChange(record, overwrite = false) {
     }
   }
   // Add the new operation to the stack
-  historyRef.value.stack.push({ ...record, timestamp })
+  historyRef.value.stack.push({...record, timestamp})
   historyRef.value.offset++;
 }
+
 function getLines(text, position) {
   return text.substring(0, position).split('\n');
 }
+
 function handleChange(e) {
-  const { value, selectionStart, selectionEnd } = e.target;
+  const {value, selectionStart, selectionEnd} = e.target;
 
   recordChange(
       {
@@ -215,8 +220,9 @@ function handleChange(e) {
   emits('input', value);
   // props.onValueChange(value);
 }
+
 function undoEdit() {
-  const { stack, offset } = historyRef.value;
+  const {stack, offset} = historyRef.value;
 
   // Get the previous edit
   const record = stack[offset - 1];
@@ -227,8 +233,9 @@ function undoEdit() {
     historyRef.value.offset = Math.max(offset - 1, 0);
   }
 }
+
 function redoEdit() {
-  const { stack, offset } = historyRef.value;
+  const {stack, offset} = historyRef.value;
 
   // Get the next edit
   const record = stack[offset + 1];
@@ -239,7 +246,9 @@ function redoEdit() {
     historyRef.value.offset = Math.min(offset + 1, stack.length - 1);
   }
 }
+
 function updateInput(record) {
+  debugger
   if (!textareaInsRef.value.$el) return;
   // Update values and selection state
   textareaInsRef.value.$el.value = record.value;
@@ -248,9 +257,10 @@ function updateInput(record) {
   emits('input', record.value);
   // props.onValueChange(record.value);
 }
+
 function handleKeyDown(e) {
   // console.log(navigator.platform);
-  const { tabSize, insertSpaces, ignoreTabKey } = this;
+  const {tabSize, insertSpaces, ignoreTabKey} = this;
 
   if (this.$listeners.keydown) {
     // onKeyDown(e);
@@ -265,7 +275,7 @@ function handleKeyDown(e) {
     (e.target).blur();
     emits('blur', e);
   }
-  const { value, selectionStart, selectionEnd } = e.target
+  const {value, selectionStart, selectionEnd} = e.target
   const tabCharacter = (insertSpaces ? ' ' : '\t').repeat(tabSize);
   if (e.keyCode === KEYCODE_TAB && !ignoreTabKey && captureRef.value) {
     // Prevent focus change
@@ -388,7 +398,7 @@ function handleKeyDown(e) {
         chars = ["'", "'"];
       }
     } else if (e.keyCode === KEYCODE_BACK_QUOTE && !e.shiftKey) {
-        chars = ['`', '`'];
+      chars = ['`', '`'];
     }
 
     // console.log(isMacLike, "navigator" in global && /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform));
@@ -398,8 +408,8 @@ function handleKeyDown(e) {
       e.preventDefault();
       applyEdits({
         value: value.substring(0, selectionStart) + chars[0] + value.substring(selectionStart, selectionEnd) +
-        chars[1] +
-        value.substring(selectionEnd),
+            chars[1] +
+            value.substring(selectionEnd),
         // Update caret position
         selectionStart,
         selectionEnd: selectionEnd + 2,
@@ -407,26 +417,26 @@ function handleKeyDown(e) {
     }
   } else if (
       (isMacLike
-      ? // Trigger undo with ⌘+Z on Mac
-      e.metaKey && e.keyCode === KEYCODE_Z
-      : // Trigger undo with Ctrl+Z on other platforms
-      e.ctrlKey && e.keyCode === KEYCODE_Z) &&
+          ? // Trigger undo with ⌘+Z on Mac
+          e.metaKey && e.keyCode === KEYCODE_Z
+          : // Trigger undo with Ctrl+Z on other platforms
+          e.ctrlKey && e.keyCode === KEYCODE_Z) &&
       !e.shiftKey &&
       !e.altKey
-      ) {
+  ) {
     e.preventDefault();
     undoEdit();
   } else if (
       (isMacLike
-      ? // Trigger redo with ⌘+Shift+Z on Mac
-      e.metaKey && e.keyCode === KEYCODE_Z && e.shiftKey
-      : isWindows
-      ? // Trigger redo with Ctrl+Y on Windows
-      e.ctrlKey && e.keyCode === KEYCODE_Y
-      : // Trigger redo with Ctrl+Shift+Z on other platforms
-      e.ctrlKey && e.keyCode === KEYCODE_Z && e.shiftKey) &&
+          ? // Trigger redo with ⌘+Shift+Z on Mac
+          e.metaKey && e.keyCode === KEYCODE_Z && e.shiftKey
+          : isWindows
+              ? // Trigger redo with Ctrl+Y on Windows
+              e.ctrlKey && e.keyCode === KEYCODE_Y
+              : // Trigger redo with Ctrl+Shift+Z on other platforms
+              e.ctrlKey && e.keyCode === KEYCODE_Z && e.shiftKey) &&
       !e.altKey
-      ) {
+  ) {
     e.preventDefault();
 
     redoEdit();
@@ -449,8 +459,9 @@ onMounted(() => {
          :style="{'min-height': lineNumbersHeightRef }"
          aria-hidden="true"
          v-if="props.lineNumbers">
-      <div class="prism-editor__line-width-calc" style="">999</div>
-      <div class="prism-editor__line-number token comment" v-for="(item, index) in lineNumbersCountRef" v-text="++index"></div>
+      <div class="prism-editor__line-width-calc">999</div>
+      <div class="prism-editor__line-number token comment" v-for="(item, index) in lineNumbersCountRef"
+           v-text="++index"></div>
     </div>
     <div class="prism-editor__container">
       <textarea ref="textareaInsRef"
@@ -467,14 +478,14 @@ onMounted(() => {
                 :value="codeDataRef"
                 @input="handleChange"
                 @keydown="handleKeyDown"
-                @click=""
-                @keyup=""
-                @focus=""
-                @blur=""></textarea>
-      <pre ref="pre"
+                @click="e => emits('click', e)"
+                @keyup="e => emits('keyup', e)"
+                @focus="e => emits('focus', e)"
+                @blur="e => emits('blur', e)"></textarea>
+      <pre ref="preInsRef"
            class="prism-editor__editor"
            data-testid="preview">
-        <code></code>
+        <code v-html="contentRef"></code>
       </pre>
     </div>
   </div>
@@ -490,88 +501,94 @@ onMounted(() => {
   tab-size: 1.5em;
   -moz-tab-size: 1.5em;
 
-@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+  @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+    .prism-editor__textarea {
+      color: transparent !important;
+    }
+
+    .prism-editor__textarea::selection {
+      background-color: #accef7 !important;
+      color: transparent !important;
+    }
+  }
+
+  .prism-editor__container {
+    position: relative;
+    text-align: left;
+    box-sizing: border-box;
+    padding: 0;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .prism-editor__line-numbers {
+    height: 100%;
+    overflow: hidden;
+    flex-shrink: 0;
+    padding-top: 4px;
+    margin-top: 0;
+    margin-right: 10px;
+
+    .prism-editor__line-width-calc {
+      height: 0px;
+      visibility: hidden;
+      pointer-events: none;
+    }
+  }
+
+  .prism-editor__line-number {
+    /* padding: 0 3px 0 5px; */
+    text-align: right;
+    white-space: nowrap;
+  }
+
   .prism-editor__textarea {
-    color: transparent !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    resize: none;
+    color: inherit;
+    overflow: hidden;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-fill-color: transparent;
   }
-  .prism-editor__textarea::selection {
-    background-color: #accef7 !important;
-    color: transparent !important;
+
+  .prism-editor__textarea,
+  .prism-editor__editor {
+    margin: 0;
+    border: 0;
+    background: none;
+    box-sizing: inherit;
+    display: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    font-style: inherit;
+    font-variant-ligatures: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
+    tab-size: inherit;
+    text-indent: inherit;
+    text-rendering: inherit;
+    text-transform: inherit;
+    white-space: pre-wrap;
+    /*word-wrap: keep-all;*/
+    overflow-wrap: break-word;
+    padding: 0;
   }
-}
 
-.prism-editor__container {
-  position: relative;
-  text-align: left;
-  box-sizing: border-box;
-  padding: 0;
-  overflow: hidden;
-  width: 100%;
-}
+  .prism-editor__textarea--empty {
+    -webkit-text-fill-color: inherit !important;
+  }
 
-.prism-editor__line-numbers {
-  height: 100%;
-  overflow: hidden;
-  flex-shrink: 0;
-  padding-top: 4px;
-  margin-top: 0;
-  margin-right: 10px;
-  .prism-editor__line-width-calc {
-    height: 0px;
-    visibility: hidden;
+  /* highlight */
+
+  .prism-editor__editor {
+    position: relative;
     pointer-events: none;
   }
-}
-.prism-editor__line-number {
-  /* padding: 0 3px 0 5px; */
-  text-align: right;
-  white-space: nowrap;
-}
-
-.prism-editor__textarea {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
-  resize: none;
-  color: inherit;
-  overflow: hidden;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-font-smoothing: antialiased;
-  -webkit-text-fill-color: transparent;
-}
-
-.prism-editor__textarea,
-.prism-editor__editor {
-  margin: 0;
-  border: 0;
-  background: none;
-  box-sizing: inherit;
-  display: inherit;
-  font-family: inherit;
-  font-size: inherit;
-  font-style: inherit;
-  font-variant-ligatures: inherit;
-  font-weight: inherit;
-  letter-spacing: inherit;
-  line-height: inherit;
-  tab-size: inherit;
-  text-indent: inherit;
-  text-rendering: inherit;
-  text-transform: inherit;
-  white-space: pre-wrap;
-  /*word-wrap: keep-all;*/
-  overflow-wrap: break-word;
-  padding: 0;
-}
-.prism-editor__textarea--empty {
-  -webkit-text-fill-color: inherit !important;
-}
-/* highlight */
-.prism-editor__editor {
-  position: relative;
-  pointer-events: none;
-}
 }
 </style>

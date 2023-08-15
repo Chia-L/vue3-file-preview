@@ -1,4 +1,5 @@
-import renderText from '@/vendors/text'
+import renderPptx from "@/vendors/pptx"
+import renderText from '@/vendors/text/'
 
 /**
  * @description 构造一个vue的包装，让上层统一处理销毁和替换节点
@@ -14,6 +15,14 @@ function VueWrapper(el) {
   }
 }
 const handlers = [
+  {
+    accepts: ["pptx"],
+    handler: async (buffer, target) => {
+      await renderPptx(buffer, target, null);
+      window.dispatchEvent(new Event("resize"));
+      return VueWrapper(target);
+    }
+  },
   {
     accepts: ["txt", "json", "js", "css", "java", "py", "html", "jsx", "ts", "tsx", "xml", "log"],
     handler: async (buffer, target) => {
